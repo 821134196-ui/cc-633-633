@@ -1,0 +1,136 @@
+// Prisma schema — SQLite 不支持 enum/Decimal，状态用字符串、数值用 Float
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 电箱：FREE 空闲 / OCCUPIED 已占用（停用未拆线前仍 OCCUPIED）
+model Box {
+  id                   String        @id @default(cuid())
+  code                 String        @unique
+  name                 String
+  location             String?
+  status               String        @default("FREE")
+  currentApplicationId String?       @unique
+  currentApplication   Application?  @relation("BoxCurrent", fields: [currentApplicationId], references: [id])
+  applications         Application[]
+  createdAt            DateTime      @default(now())
+}
+
+model Team {
+  id           String        @id @default(cuid())
+  name         String        @unique
+  contact      String?
+  applications Application[]
+  createdAt    DateTime      @default(now())
+}
+
+// 电表：INSTALLED 在用 / REMOVED 已拆换
+model Meter {
+  id             String        @id @default(cuid())
+  code           String        @unique
+  status         String        @default("INSTALLED")
+  applicationId  String?
+  application    Application?  @relation("AppMeters", fields: [applicationId], references: [id])
+  currentOfApplication Application? @relation("AppCurrentMeter")
+  installedAt    DateTime      @default(now())
+  removedAt      DateTime?
+  readings       Reading[]
+  changesAsOld   MeterChange[] @relation("OldMeter")
+  changesAsNew   MeterChange[] @relation("NewMeter")
+}
+
+// 用电申请状态机：
+// PENDING 待电工验收接线 -> ACTIVE 供电中 -> STOPPED 已停用待拆线 -> RELEASED 已拆线释放
+// PENDING --电工拒绝--> REJECTED（释放电箱）
+model Application {
+  id           String        @id @default(cuid())
+  code         String        @unique
+  teamId       String
+  team         Team          @relation(fields: [teamId], references: [id])
+  boxId        String
+  box          Box           @relation(fields: [boxId], references: [id])
+  currentBox   Box?          @relation("BoxCurrent")
+  purpose      String
+  plannedStart DateTime
+  plannedEnd   DateTime?
+  status       String        @default("PENDING")
+  meters       Meter[]       @relation("AppMeters")
+  currentMeterId String?       @unique
+  currentMeter Meter?        @relation("AppCurrentMeter", fields: [currentMeterId], references: [id])
+  activatedAt  DateTime?
+  stoppedAt    DateTime?
+  releasedAt   DateTime?
+  rejectReason String?
+  readings     Reading[]
+  meterChanges MeterChange[]
+  billing      Billing?
+  createdAt    DateTime      @default(now())
+}
+
+// 读数
+// kind: INITIAL 起始(验收) / INTERIM 中途录数 / OLD_FINAL 换表旧表末值 / NEW_INITIAL 换表新表初值 / FINAL 停用末次
+// status: OK 正常 / PENDING_REVIEW 待复核 / CONFIRMED 复核确认 / REJECTED 复核驳回
+model Reading {
+  id             String       @id @default(cuid())
+  applicationId  String
+  application    Application  @relation(fields: [applicationId], references: [id])
+  meterId        String
+  meter          Meter        @relation(fields: [meterId], references: [id])
+  seq            Int
+  kind           String
+  value          Float
+  recordedAt     DateTime
+  status         String       @default("OK")
+  anomalyReason  String?
+  previousReadingId String?
+  note           String?
+  reviewer       String?
+  reviewedAt     DateTime?
+  createdAt      DateTime     @default(now())
+  @@unique([applicationId, seq])
+}
+
+// 换表记录：旧表末值 + 新表初值，分段接续计算用量
+model MeterChange {
+  id                  String      @id @default(cuid())
+  applicationId       String
+  application         Application @relation(fields: [applicationId], references: [id])
+  oldMeterId          String
+  oldMeter            Meter       @relation("OldMeter", fields: [oldMeterId], references: [id])
+  newMeterId          String
+  newMeter            Meter       @relation("NewMeter", fields: [newMeterId], references: [id])
+  oldFinalReadingId   String
+  newInitialReadingId String
+  changedAt           DateTime
+  note                String?
+  createdAt           DateTime    @default(now())
+}
+
+// 结算账单（停用后生成；有待复核读数时 PENDING_REVIEW，不视为最终收费）
+model Billing {
+  id            String      @id @default(cuid())
+  applicationId String      @unique
+  application   Application @relation(fields: [applicationId], references: [id])
+  status        String
+  totalUsage    Float
+  totalAmount   Float
+  // JSON 文本：按电表分段、按月分摊、完整读数链
+  segmentsText  String
+  monthlyText   String
+  chainText     String
+  generatedAt   DateTime    @default(now())
+  updatedAt     DateTime    @default(now())
+}
+
+// 电价（本地模拟收费接口）
+model TariffRate {
+  id            String   @id @default(cuid())
+  name          String
+  pricePerKwh   Float
+  effectiveFrom DateTime @unique
+}

@@ -1,0 +1,21 @@
+{
+  "name": "site-temp-power",
+  "version": "1.0.0",
+  "private": true,
+  "description": "施工现场临时用电申请与电表结算系统",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "setup": "npm run setup -w server",
+    "prestart": "npm run setup",
+    "start": "concurrently -k -n SERVER,WEB -c blue,green \"npm:start:server\" \"npm:start:web\"",
+    "start:server": "npm run start -w server",
+    "start:web": "npm run dev -w web",
+    "verify": "node scripts/verify.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}

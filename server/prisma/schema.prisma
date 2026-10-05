@@ -1,0 +1,115 @@
+// 施工现场临时用电 - 数据模型
+// 班组按电箱申请临时供电，电工验收开通，停用按实际用量结算
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 施工班组
+model Team {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  contact      String?
+  phone        String?
+  applications Application[]
+  createdAt    DateTime      @default(now())
+}
+
+// 配电箱
+model ElectricBox {
+  id           Int           @id @default(autoincrement())
+  code         String        @unique // 如 DB-01
+  location     String?
+  capacityKw   Float         @default(63)
+  occupancy    BoxOccupancy?
+  applications Application[]
+  createdAt    DateTime      @default(now())
+}
+
+// 电箱占用：一行表示电箱当前被某个申请占用。
+// boxId 唯一约束保证一个电箱同一时刻只能分配给一组（并发申请只有一单能插入成功）。
+// 从申请提交开始占用，直到电工确认拆线才删除释放。
+model BoxOccupancy {
+  id            Int         @id @default(autoincrement())
+  boxId         Int         @unique
+  box           ElectricBox @relation(fields: [boxId], references: [id])
+  applicationId Int         @unique
+  application   Application @relation(fields: [applicationId], references: [id])
+  createdAt     DateTime    @default(now())
+}
+
+// 用电申请
+// 状态流转：PENDING(待验收) -> ACTIVE(供电中) -> STOPPING(停用待核表)
+//           -> AWAIT_DISCONNECT(待拆线) -> COMPLETED(已完结)
+//           另有 REJECTED(已驳回) / CANCELLED(已取消)
+model Application {
+  id           Int            @id @default(autoincrement())
+  teamId       Int
+  team         Team           @relation(fields: [teamId], references: [id])
+  boxId        Int
+  box          ElectricBox    @relation(fields: [boxId], references: [id])
+  purpose      String // 用途
+  plannedStart DateTime // 计划用电时间
+  plannedEnd   DateTime
+  status       String         @default("PENDING")
+  occupancy    BoxOccupancy?
+  meters       Meter[]
+  readings     Reading[]
+  bill         Bill?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+// 电表：挂在一个申请下。中途换表时旧表记末值(status=REPLACED)，新表记初值，
+// 用量按各表分段计算后累加，保证接续正确。
+model Meter {
+  id             Int       @id @default(autoincrement())
+  code           String // 表计编号（同一申请内唯一即可，允许换表后复用物理编号之外的编号）
+  applicationId  Int
+  application    Application @relation(fields: [applicationId], references: [id])
+  initialReading Float // 起始读数
+  finalReading   Float? // 末次读数（换表或结算时写入）
+  status         String    @default("ACTIVE") // ACTIVE / REPLACED / CLOSED
+  installedAt    DateTime  @default(now())
+  removedAt      DateTime?
+  readings       Reading[]
+
+  @@unique([applicationId, code])
+}
+
+// 抄表读数。
+// kind: INITIAL 起始 / ROUTINE 日常 / FINAL 结算末次 / SWAP_OLD_FINAL 换表旧表末值 / SWAP_NEW_INITIAL 换表新表初值
+// status: CONFIRMED 有效 / PENDING_REVIEW 待复核（倒退或异常跃升，不参与计费）/ REJECTED 已驳回
+model Reading {
+  id            Int         @id @default(autoincrement())
+  meterId       Int
+  meter         Meter       @relation(fields: [meterId], references: [id])
+  applicationId Int
+  application   Application @relation(fields: [applicationId], references: [id])
+  value         Float
+  kind          String      @default("ROUTINE")
+  status        String      @default("CONFIRMED")
+  recordedBy    String // 录数人
+  recordedAt    DateTime    @default(now())
+  reviewNote    String?
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  createdAt     DateTime    @default(now())
+}
+
+// 结算账单：停用核表后生成，detail 保存分段用量、逐月用量与全部有效读数，便于核对完整使用过程
+model Bill {
+  id            Int         @id @default(autoincrement())
+  applicationId Int         @unique
+  application   Application @relation(fields: [applicationId], references: [id])
+  totalUsage    Float // 总用量（度）
+  unitPrice     Float // 单价（元/度）
+  totalAmount   Float // 总金额（元）
+  detail        String // JSON：分段/逐月明细与读数链
+  createdAt     DateTime    @default(now())
+}

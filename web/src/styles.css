@@ -1,0 +1,402 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+  background: #f3f5f7;
+  color: #1f2933;
+}
+
+.app {
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 20px;
+  background: #14343b;
+  color: #fff;
+  flex-wrap: wrap;
+}
+
+.brand {
+  color: #ffd166;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 17px;
+}
+
+.topbar nav {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.topbar nav a {
+  color: #cfe3e8;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.topbar nav a.active,
+.topbar nav a:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.role-switch {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.role-switch button {
+  background: transparent;
+  border: 1px solid #6b8f99;
+  color: #cfe3e8;
+  padding: 4px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.role-switch button.active {
+  background: #ffd166;
+  border-color: #ffd166;
+  color: #14343b;
+  font-weight: 600;
+}
+
+.role-switch select {
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+main {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h2 {
+  font-size: 20px;
+}
+
+h3 {
+  margin-top: 28px;
+}
+
+a {
+  color: #0e7490;
+}
+
+button,
+.button {
+  background: #0e7490;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+button:disabled {
+  background: #9fb6bd;
+  cursor: not-allowed;
+}
+
+button.danger {
+  background: #c0392b;
+}
+
+.muted {
+  color: #7b8794;
+  font-size: 13px;
+}
+
+.error {
+  color: #c0392b;
+}
+
+.success {
+  color: #1e8e5a;
+}
+
+.warn {
+  color: #b7791f;
+}
+
+/* 电箱看板 */
+.box-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.box-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px;
+  border-left: 5px solid #38a169;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.box-card.occupied {
+  border-left-color: #dd6b20;
+}
+
+.box-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+}
+
+.box-meta {
+  color: #7b8794;
+  font-size: 13px;
+  margin: 6px 0 10px;
+}
+
+.box-current {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.tag {
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  white-space: nowrap;
+}
+
+.status-IDLE { background: #c6f6d5; color: #22543d; }
+.status-PENDING { background: #feebc8; color: #7b341e; }
+.status-ACTIVE { background: #bee3f8; color: #2a4365; }
+.status-STOPPING { background: #fefcbf; color: #744210; }
+.status-AWAIT_DISCONNECT { background: #fed7d7; color: #742a2a; }
+.status-COMPLETED { background: #e2e8f0; color: #4a5568; }
+.status-REJECTED, .status-CANCELLED { background: #edf2f7; color: #718096; }
+
+/* 表格 */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  margin-bottom: 16px;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid #edf2f7;
+  font-size: 14px;
+}
+
+.table th {
+  background: #f7fafc;
+  color: #4a5568;
+  font-weight: 600;
+}
+
+.row-warn {
+  background: #fffaf0;
+}
+
+/* 表单 */
+.card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 480px;
+}
+
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.form input,
+.form select,
+.inline-form input {
+  padding: 9px 12px;
+  border: 1px solid #cbd5e0;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.narrow {
+  max-width: 560px;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0;
+  align-items: flex-start;
+}
+
+.inline-form {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  background: #fff;
+  padding: 14px;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.inline-form input {
+  width: 150px;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+/* 手机录数页 */
+.mobile-page {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.prev-card {
+  background: #14343b;
+  color: #fff;
+  border-radius: 14px;
+  padding: 22px;
+  text-align: center;
+  margin: 16px 0;
+}
+
+.prev-card .muted {
+  color: #9fc3cc;
+}
+
+.prev-value {
+  font-size: 52px;
+  font-weight: 700;
+  color: #ffd166;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.reading-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reading-form input {
+  font-size: 28px;
+  padding: 14px;
+  border: 2px solid #0e7490;
+  border-radius: 12px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.reading-form button {
+  font-size: 18px;
+  padding: 14px;
+  border-radius: 12px;
+}
+
+.result {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 10px;
+  line-height: 1.7;
+}
+
+.ok-box {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.warn-box {
+  background: #feebc8;
+  color: #7b341e;
+}
+
+/* 复核 */
+.review-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border-left: 5px solid #dd6b20;
+}
+
+.review-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+/* 账单 */
+.bill {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.bill-summary {
+  display: flex;
+  gap: 40px;
+  margin: 12px 0 20px;
+}
+
+.bill-summary .num {
+  font-size: 26px;
+  font-weight: 700;
+  color: #14343b;
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    gap: 10px;
+  }
+  main {
+    padding: 12px;
+  }
+  .bill-summary {
+    gap: 20px;
+  }
+}

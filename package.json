@@ -1,0 +1,17 @@
+{
+  "name": "site-power-settlement",
+  "version": "1.0.0",
+  "private": true,
+  "description": "施工现场临时用电申请与电表结算系统（NestJS + React + Prisma + SQLite）",
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix web install",
+    "db:setup": "npm --prefix server run db:setup",
+    "dev": "npm run db:setup && concurrently -n server,web -c blue,green \"npm --prefix server run start:dev\" \"npm --prefix web run dev\"",
+    "start": "npm run dev",
+    "build": "npm --prefix server run build && npm --prefix web run build",
+    "test": "npm --prefix server test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
